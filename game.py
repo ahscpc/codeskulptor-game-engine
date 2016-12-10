@@ -72,9 +72,9 @@ class Game:
     def checkCollisions(object, objects):
         obj1bounds = object.scaled_bounds()
         obj1_loc, obj1_s = obj1bounds[0], object.scaled_size()
-        for GameObject in objects:
-            obj2bounds = GameObject.scaled_bounds()
-            obj2_loc, obj2_s = obj2bounds[0], GameObject.scaled_size()
+        for Game_Object in objects:
+            obj2bounds = Game_Object.scaled_bounds()
+            obj2_loc, obj2_s = obj2bounds[0], Game_Object.scaled_size()
             ##check if colliding (boolean)
             doesCollide = ((obj1_loc[0] < obj2_loc[0] + obj2_s[0] and obj1_loc[0] + obj1_s[0] > obj2_loc[0]) and (obj1_loc[1] < obj2_loc[1] + obj2_s[1] and obj1_loc[1] + obj1_s[1] > obj2_loc[1]));
             ##find translation vector 
@@ -101,7 +101,6 @@ class Game:
         if doesCollide:
             object.location[0] = object.location[0] + mtv[0] 
             object.location[1] = object.location[1] + mtv[1]
-    
     
     def draw(canvas):
         for gameData in Game.games:
