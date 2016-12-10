@@ -75,7 +75,7 @@ class Game:
         for GameObject in objects:
             obj2bounds = GameObject.scaled_bounds()
             obj2_loc, obj2_s = obj2bounds[0], GameObject.scaled_size()
-            ##check if colliding
+            ##check if colliding (boolean)
             doesCollide = ((obj1_loc[0] < obj2_loc[0] + obj2_s[0] and obj1_loc[0] + obj1_s[0] > obj2_loc[0]) and (obj1_loc[1] < obj2_loc[1] + obj2_s[1] and obj1_loc[1] + obj1_s[1] > obj2_loc[1]));
             ##find translation vector 
             if doesCollide:
@@ -88,16 +88,20 @@ class Game:
                 ];
                 sorted(edgeDifferences)
                 mtv = edgeDifferences[0]
-            ##return collision boolean and translation vector
+        ##return collision boolean and translation vector
         return doesCollide, mtv
-    
+
     def physics(self, object):
         # Apply gravity
         object.location = (object.location[0] + self.gravity[0],
                            object.location[1] + self.gravity[1])
         
         # Check collisions
-        collisions = Game.checkCollisions(object, self.objects)
+        doesCollide, mtv = Game.checkCollisions(object, self.objects)
+        if doesCollide:
+            object.location[0] = object.location[0] + mtv[0] 
+            object.location[1] = object.location[1] + mtv[1]
+    
     
     def draw(canvas):
         for gameData in Game.games:
