@@ -70,7 +70,26 @@ class Game:
     games = []
         
     def checkCollisions(object, objects):
-        pass
+        obj1bounds = object.scaled_bounds()
+        obj1_loc, obj1_s = obj1bounds[0], object.scaled_size()
+        for GameObject in objects:
+            obj2bounds = GameObject.scaled_bounds()
+            obj2_loc, obj2_s = obj2bounds[0], GameObject.scaled_size()
+            ##check if colliding
+            doesCollide, mtv = ((obj1_loc[0] < obj2_loc[0] + obj2_s[0] and obj1_loc[0] + obj1_s[0] > obj2_loc[0]) and (obj1_loc[1] < obj2_loc[1] + obj2_s[1] and obj1_loc[1] + obj1_s[1] > obj2_loc[1]));
+            ##find translation vector 
+            if doesCollide:
+                ##find distances between shape1's edge and shape2's opposite edge
+                edgeDifferences = [
+                    obj1_loc[0] - (obj2_loc[0] + obj2_s[0]), ##left
+                    (obj1_loc[0] + obj1_s[0]) - obj2_loc[0], ##right
+                    obj1_loc[1] - (obj2_loc[1] + obj2_s[1]), ##top
+                    (obj1_loc[1] + obj1_s[1]) - obj2_loc[1], ##bottom
+                ];
+                sorted(edgeDifferences)
+                mtv = edgeDifferences[0]
+            ##return collision boolean and translation vector
+        return doesCollide, mtv
     
     def physics(self, object):
         # Apply gravity
