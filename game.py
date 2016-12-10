@@ -76,7 +76,7 @@ class Game:
             obj2bounds = GameObject.scaled_bounds()
             obj2_loc, obj2_s = obj2bounds[0], GameObject.scaled_size()
             ##check if colliding
-            doesCollide, mtv = ((obj1_loc[0] < obj2_loc[0] + obj2_s[0] and obj1_loc[0] + obj1_s[0] > obj2_loc[0]) and (obj1_loc[1] < obj2_loc[1] + obj2_s[1] and obj1_loc[1] + obj1_s[1] > obj2_loc[1]));
+            doesCollide = ((obj1_loc[0] < obj2_loc[0] + obj2_s[0] and obj1_loc[0] + obj1_s[0] > obj2_loc[0]) and (obj1_loc[1] < obj2_loc[1] + obj2_s[1] and obj1_loc[1] + obj1_s[1] > obj2_loc[1]));
             ##find translation vector 
             if doesCollide:
                 ##find distances between shape1's edge and shape2's opposite edge
