@@ -30,7 +30,7 @@ class GameObject:
         return (scaled_size[0] / 2, scaled_size[0] / 2)
     
     def scaled_location_center(self):
-        scaled_center = scaled_center()
+        scaled_center = self.scaled_center()
         
         centerX = self.location[0] + scaled_center[0]
         centerY = self.location[1] + scaled_center[1]
