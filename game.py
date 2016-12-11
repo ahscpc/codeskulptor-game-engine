@@ -8,7 +8,7 @@
 import simplegui
 
 RENDER_DEBUG = False
-COLLISION_DEBUG = True
+COLLISION_DEBUG = False
 
 class GameObject:
     
@@ -104,30 +104,39 @@ class Game:
                 print "SCALED_SIZE:\t" + str(obj2_s)
                 print
 
-            
-            if ((obj1_o[0] < obj2_o[0] + obj2_s[0] and ##got these from online, should be right
-                 obj1_o[0] + obj1_s[0] > obj2_o[0]) and 
-                (obj1_o[1] < obj2_o[1] + obj2_s[1] and 
-                 obj1_o[1] + obj1_s[1] > obj2_o[1])):
+            if ((obj2_o[0] < obj1_o[0] + obj1_s[0] and
+                 obj2_o[0] + obj2_s[0] > obj1_o[0]) and 
+                (obj2_o[1] < obj1_o[1] + obj1_s[1] and 
+                 obj2_o[1] + obj2_s[1] > obj1_o[1])):
                 
                     # Find distances between shape1's edge and shape2's opposite edge
                     edge_differences_x = [
-                        obj1_o[0] - (obj2_o[0] + obj2_s[0]), # Left
-                        (obj1_o[0] + obj1_s[0]) - obj2_o[0] # Right
+                        obj2_o[0] - (obj1_o[0] + obj1_s[0]), # Left
+                        (obj2_o[0] + obj2_s[0]) - obj1_o[0] # Right               
                     ]
                     edge_differences_y = [
-                        obj1_o[1] - (obj2_o[1] + obj2_s[1]), # Top
-                        (obj1_o[1] + obj1_s[1]) - obj2_o[1] # Bottom
+                        obj2_o[1] - (obj1_o[1] + obj1_s[1]), # Top
+                        (obj2_o[1] + obj2_s[1]) - obj1_o[1] # Bottom                        
                     ]
+                    
+                    if COLLISION_DEBUG:
+                        print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+                        print "POSSIBLE DIFFERENCES"
+                        print "Left:\t" + str(edge_differences_x[0])
+                        print "Right:\t" + str(edge_differences_x[1])
+                        print "Top:\t" + str(edge_differences_y[0])
+                        print "Bottom:\t" + str(edge_differences_y[1])                        
+                        print
+                        
                     edge_differences_x = sorted(edge_differences_x)
                     edge_differences_y = sorted(edge_differences_y)
-                    mtv = (edge_differences_x[1], edge_differences_y[1])
+                    mtv = (edge_differences_x[0], edge_differences_y[0])
 
                     if COLLISION_DEBUG:
-                        print "-------------------------------"
+                        print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
                         print "Collision!"
                         print "Obj1:\t" + obj1.name + "\t" + "Obj2:\t" + obj2.name
-                        print "Vector:\t" + str(mtv)
+                        print "Chosen Vectors:\t" + str(mtv)
                         print
 
                     # Return collision boolean and translation vector
@@ -143,9 +152,11 @@ class Game:
         # Check collisions
         doesCollide, mtv = Game.checkCollisions(object, self.objects)
         if doesCollide:
-            object.location = (object.location[0] + mtv[0],
-                               object.location[1] + mtv[1])
-        
+            if abs(mtv[0]) <= 4:
+                object.location = (object.location[0] + mtv[0], object.location[1] + mtv[1])  
+            else:
+                object.location = (object.location[0], object.location[1] + mtv[1])
+
     def draw(canvas):
         for gameData in Game.games:
             game = gameData[0]
@@ -212,14 +223,21 @@ game = Game(frame, draw)
 test_sprite = simplegui.load_image("https://i.sli.mg/ZCoVVl.png")
 test = GameObject(test_sprite)
 test.name = "test"
-test.scale = (3.0, 1.0)
+test.scale = (1.0, 1.0)
+test.location = (300, 0)
 game.objects.append(test)
 
+test2 = GameObject(test_sprite)
+test2.name = "test2"
+test2.scale = (1.0, 1.0)
+test2.location = (350, 0)
+game.objects.append(test2)
+
 platform = GameObject(test_sprite)
-platform.location = (300, 200)
+platform.location = (300, 300)
 platform.name = "platform"
 platform.fixed = True
-platform.scale = (4.0, 0.5)
+platform.scale = (1, 1)
 game.objects.append(platform)
 
 frame.start()
