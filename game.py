@@ -97,14 +97,17 @@ class Game:
                 
                 # Find translation vector 
                 # Find distances between shape1's edge and shape2's opposite edge
-                edge_differences = [
+                edge_differences_x = [
                     obj1_loc[0] - (obj2_loc[0] + obj2_s[0]), # Left
-                    obj1_loc[0] + obj1_s[0] - obj2_loc[0], # Right
-                    obj1_loc[1] - (obj2_loc[1] + obj2_s[1]), # Top
-                    obj1_loc[1] + obj1_s[1] - obj2_loc[1], # Bottom
+                    obj1_loc[0] + obj1_s[0] - obj2_loc[0] # Right
                 ]
-                edge_differences = sorted(edge_differences)
-                mtv = edge_differences =[0]
+                edge_differences_y = [
+                    obj1_loc[1] - (obj2_loc[1] + obj2_s[1]), # Top
+                    obj1_loc[1] + obj1_s[1] - obj2_loc[1] # Bottom
+                ]
+                edge_differences_x = sorted(edge_differences_x)
+                edge_differences_y = sorted(edge_differences_y)
+                mtv = (edge_differences_x[1], edge_differences_y[1])
                 
                 if COLLISION_DEBUG:
                     print "Collision!"
