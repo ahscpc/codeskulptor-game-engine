@@ -5,11 +5,14 @@
 # Some features may work in other browsers, but do not expect
 # full functionality.  It does NOT run in Internet Explorer.
 
-import simplegui
+import simplegui, math
 
 RENDER_DEBUG = False
 COLLISION_DEBUG = False
 
+def pyth(sidea, sideb):
+    return (sidea ** 2) + (sideb ** 2) ##no sqrt for efficiency
+    
 class GameObject:
     
     def __init__(self, sprite):
@@ -17,6 +20,7 @@ class GameObject:
         self.velocity = (0, 0)
         self.scale = (1, 1)
         self.anchor = (0.5, 0.5)
+        self.force = 1 ## obj w/ higher force can push objects with lower force
         self.size = (sprite.get_width(), sprite.get_height())
         self.rotation = 0
         self.fixed = False
@@ -110,52 +114,65 @@ class Game:
                  obj2_o[1] + obj2_s[1] > obj1_o[1])):
                 
                     # Find distances between shape1's edge and shape2's opposite edge
-                    edge_differences_x = [
-                        obj2_o[0] - (obj1_o[0] + obj1_s[0]), # Left
-                        (obj2_o[0] + obj2_s[0]) - obj1_o[0] # Right               
-                    ]
-                    edge_differences_y = [
-                        obj2_o[1] - (obj1_o[1] + obj1_s[1]), # Top
-                        (obj2_o[1] + obj2_s[1]) - obj1_o[1] # Bottom                        
+                    edge_differences = [
+                        [obj2_o[0] - (obj1_o[0] + obj1_s[0]), 0, 0], # Left
+                        [(obj2_o[0] + obj2_s[0]) - obj1_o[0], 0, 0], # Right               
+                        [0, obj2_o[1] - (obj1_o[1] + obj1_s[1]), 0], # Top
+                        [0, (obj2_o[1] + obj2_s[1]) - obj1_o[1], 0] # Bottom                        
                     ]
                     
                     if COLLISION_DEBUG:
                         print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
                         print "POSSIBLE DIFFERENCES"
-                        print "Left:\t" + str(edge_differences_x[0])
-                        print "Right:\t" + str(edge_differences_x[1])
-                        print "Top:\t" + str(edge_differences_y[0])
-                        print "Bottom:\t" + str(edge_differences_y[1])                        
+                        print "Left:\t" + str(edge_differences[0])
+                        print "Right:\t" + str(edge_differences[1])
+                        print "Top:\t" + str(edge_differences[0])
+                        print "Bottom:\t" + str(edge_differences[1])                        
                         print
                         
-                    edge_differences_x = sorted(edge_differences_x)
-                    edge_differences_y = sorted(edge_differences_y)
-                    mtv = (edge_differences_x[0], edge_differences_y[0])
-
+                    ##use pythagoras to find final vector magnitudes and append them in (for later sorting)    
+                    edge_differences[0][2] = pyth(edge_differences[0][0],edge_differences[0][1])
+                    edge_differences[1][2] = pyth(edge_differences[1][0],edge_differences[1][1])
+                    edge_differences[2][2] = pyth(edge_differences[2][0],edge_differences[2][1])
+                    edge_differences[3][2] = pyth(edge_differences[3][0],edge_differences[3][1])
+                    
+                    edge_differences = sorted(edge_differences,key=lambda l:l[2]) ##sort by final vector length
+                    
+                    if COLLISION_DEBUG:
+                        print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+                        print "SORTED DIFFERENCES"
+                        print "0:\t" + str(edge_differences[0])
+                        print "1:\t" + str(edge_differences[1])
+                        print "2:\t" + str(edge_differences[0])
+                        print "3:\t" + str(edge_differences[1])                        
+                        print                
+                        
+                    mtv = (edge_differences[0]) ##pick smallest one
+                    
                     if COLLISION_DEBUG:
                         print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
                         print "Collision!"
                         print "Obj1:\t" + obj1.name + "\t" + "Obj2:\t" + obj2.name
-                        print "Chosen Vectors:\t" + str(mtv)
+                        print "Chosen Vector:\t" + str(mtv)
                         print
 
                     # Return collision boolean and translation vector
-                    return True, mtv
+                        
+                    return True, mtv or (0,0)
                 
         return False, (0, 0)
-
+    
     def physics(self, object):
-        # Apply gravity
-        object.location = (object.location[0] + self.gravity[0],
-                           object.location[1] + self.gravity[1])
-        
-        # Check collisions
+
+        # Check collisions (DO THIS BEFORE APPLYING GRAVITY)
         doesCollide, mtv = Game.checkCollisions(object, self.objects)
         if doesCollide:
-            if abs(mtv[0]) <= 4:
-                object.location = (object.location[0] + mtv[0], object.location[1] + mtv[1])  
-            else:
-                object.location = (object.location[0], object.location[1] + mtv[1])
+            object.location = (object.location[0] + mtv[0], object.location[1] + mtv[1])
+            
+        # Apply gravity
+        object.location = (object.location[0] + self.gravity[0] + object.velocity[0],
+                           object.location[1] + self.gravity[1] + object.velocity[1])
+                        
 
     def draw(canvas):
         for gameData in Game.games:
@@ -224,7 +241,8 @@ test_sprite = simplegui.load_image("https://i.sli.mg/ZCoVVl.png")
 test = GameObject(test_sprite)
 test.name = "test"
 test.scale = (1.0, 1.0)
-test.location = (300, 0)
+test.location = (50, 0)
+test.velocity = (3, 0)
 game.objects.append(test)
 
 test2 = GameObject(test_sprite)
@@ -232,6 +250,7 @@ test2.name = "test2"
 test2.scale = (1.0, 1.0)
 test2.location = (350, 0)
 game.objects.append(test2)
+
 
 platform = GameObject(test_sprite)
 platform.location = (300, 300)
