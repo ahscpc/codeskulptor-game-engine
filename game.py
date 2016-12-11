@@ -81,7 +81,7 @@ class Game:
             print "BOTTOM_RIGHT:\t" + str(obj1_bounds[3])
             print
             
-        obj1_loc = obj1_bounds[0]
+        obj1_o = obj1_bounds[0]
         obj1_s = obj1.scaled_size()
         
         for obj2 in objects:
@@ -89,19 +89,23 @@ class Game:
                 # We can't collide with ourself
                 continue
             obj2_bounds = obj2.scaled_bounds()
-            obj2_loc = obj2_bounds[0]
+            obj2_o = obj2_bounds[0]
             obj2_s = obj2.scaled_size()
             
             # Check if colliding (boolean)
-            if (obj1_loc[0] > obj2_loc[0] and
-                obj1_loc[0] < obj2_loc[0] + obj2_s[0] and
-                # I HAD TO STOP HERE
-                
-                obj1_loc[0] < obj2_loc[0] + obj2_s[0] and
-                obj1_loc[0] + obj1_s[0] > obj2_loc[0] and
-                obj1_loc[1] < obj2_loc[1] + obj2_s[1] and
-                obj1_loc[1] + obj1_s[1] > obj2_loc[1]):
-                
+#            if (obj1_loc[0] > obj2_loc[0] and
+#                obj1_loc[0] < obj2_loc[0] + obj2_s[0] and
+#                # I HAD TO STOP HERE
+#                
+#                obj1_loc[0] < obj2_loc[0] + obj2_s[0] and
+#                obj1_loc[0] + obj1_s[0] > obj2_loc[0] and
+#                obj1_loc[1] < obj2_loc[1] + obj2_s[1] and
+#                obj1_loc[1] + obj1_s[1] > obj2_loc[1]):
+            if ((obj1_o[0] < obj2_o[0] + obj2_s[0] and ##i think this is right but tbh i have no idea
+                 obj1_o[0] + obj1_s[0] > obj2_o[0]) and 
+                (obj1_o[1] < obj2_o[1] - obj2_s[1] and 
+                 obj1_o[1] - obj1_s[1] > obj2_o[1])):
+                    doesCollide = True
                 # Find translation vector 
                 # Find distances between shape1's edge and shape2's opposite edge
                 edge_differences_x = [
@@ -115,13 +119,13 @@ class Game:
                 edge_differences_x = sorted(edge_differences_x)
                 edge_differences_y = sorted(edge_differences_y)
                 mtv = (edge_differences_x[1], edge_differences_y[1])
-                
+
                 if COLLISION_DEBUG:
                     print "Collision!"
                     print "MTV:\t" + str(mtv)
                     print
-                    
-                # Return collision boolean and translation vector
+
+                    # Return collision boolean and translation vector
                 return True, mtv
         return False, (0, 0)
 
