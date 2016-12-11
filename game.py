@@ -1,5 +1,3 @@
-#Need to look into having multiple objects collide at once. It is easy to find configurations where objects can be pushed through one another.
-
 import simplegui, math
 
 RENDER_DEBUG = False
@@ -161,7 +159,12 @@ class Game:
         # Check collisions (DO THIS BEFORE APPLYING GRAVITY)
         doesCollide, mtv = Game.checkCollisions(object, self.objects)
         if doesCollide:
+            if abs(mtv[0]) > 0:
+                object.velocity = (0, object.velocity[1])
+            if abs(mtv[1]) > 0:
+                object.velocity = (object.velocity[0], 0)
             object.location = (object.location[0] + mtv[0], object.location[1] + mtv[1])
+            
             
         # Apply gravity
         object.location = (object.location[0] + self.gravity[0] + object.velocity[0],
@@ -236,7 +239,7 @@ test = GameObject(test_sprite)
 test.name = "test"
 test.scale = (1.0, 1.0)
 test.location = (50, 0)
-test.velocity = (3, 0)
+test.velocity = (4, 0)
 game.objects.append(test)
 
 test2 = GameObject(test_sprite)
@@ -245,6 +248,11 @@ test2.scale = (1.0, 1.0)
 test2.location = (350, 0)
 game.objects.append(test2)
 
+test3 = GameObject(test_sprite)
+test3.name = "test3"
+test3.scale = (1.0, 1.0)
+test3.location = (500, 0)
+game.objects.append(test3)
 
 platform = GameObject(test_sprite)
 platform.location = (300, 300)
