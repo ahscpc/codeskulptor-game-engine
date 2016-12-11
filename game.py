@@ -20,7 +20,6 @@ class GameObject:
         self.velocity = (0, 0)
         self.scale = (1, 1)
         self.anchor = (0.5, 0.5)
-        self.force = 1 ## obj w/ higher force can push objects with lower force
         self.size = (sprite.get_width(), sprite.get_height())
         self.rotation = 0
         self.fixed = False
