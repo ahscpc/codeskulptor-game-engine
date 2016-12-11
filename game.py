@@ -47,19 +47,18 @@ class GameObject:
     def scaled_bounds(self):
         scaled_location_center = self.scaled_location_center()
         scaled_size = self.scaled_size()
-        half = (scaled_size[0] / 2, scaled_size[1] / 2)
+         ##scaling fix: +/- the entire scaled_size, not half of it.
+        top_left = (scaled_location_center[0] - scaled_size[0],
+                    scaled_location_center[1] - scaled_size[1])
         
-        top_left = (scaled_location_center[0] - half[0],
-                    scaled_location_center[1] - half[1])
+        top_right = (scaled_location_center[0] + scaled_size[0],
+                    scaled_location_center[1] - scaled_size[1])
         
-        top_right = (scaled_location_center[0] + half[0],
-                    scaled_location_center[1] - half[1])
+        bottom_left = (scaled_location_center[0] - scaled_size[0],
+                    scaled_location_center[1] + scaled_size[1])
         
-        bottom_left = (scaled_location_center[0] - half[0],
-                    scaled_location_center[1] + half[1])
-        
-        bottom_right = (scaled_location_center[0] + half[0],
-                    scaled_location_center[1] + half[1])
+        bottom_right = (scaled_location_center[0] + scaled_size[0],
+                    scaled_location_center[1] + scaled_size[1])
         
         return (top_left, top_right, bottom_left, bottom_right)
 
@@ -72,7 +71,7 @@ class Game:
         obj1_o = obj1_bounds[0]
         obj1_s = obj1.scaled_size()
         
-        if COLLISION_DEBUG:
+        if COLLISION_DEBUG and RENDER_DEBUG:
             print "OBJECT: \t" + obj1.name
             print "TOP_LEFT:\t" + str(obj1_bounds[0])
             print "TOP_RIGHT:\t" + str(obj1_bounds[1])
@@ -91,7 +90,7 @@ class Game:
             obj2_o = obj2_bounds[0]
             obj2_s = obj2.scaled_size() 
             
-            if COLLISION_DEBUG:
+            if COLLISION_DEBUG and RENDER_DEBUG:
                 print "OBJECT 2:\t" + obj2.name
                 print "TOP_LEFT:\t" + str(obj2_bounds[0])
                 print "TOP_RIGHT:\t" + str(obj2_bounds[1])
@@ -114,7 +113,7 @@ class Game:
                     ]
                     
                     if COLLISION_DEBUG:
-                        print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+                        print "----------------------------------"
                         print "POSSIBLE DIFFERENCES"
                         print "Left:\t" + str(edge_differences[0])
                         print "Right:\t" + str(edge_differences[1])
@@ -142,8 +141,6 @@ class Game:
                     mtv = (edge_differences[0]) ##pick smallest one
                     
                     if COLLISION_DEBUG:
-                        print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-                        print "Collision!"
                         print "Obj1:\t" + obj1.name + "\t" + "Obj2:\t" + obj2.name
                         print "Chosen Vector:\t" + str(mtv)
                         print
@@ -155,22 +152,24 @@ class Game:
         return False, (0, 0)
     
     def physics(self, object):
-
-        # Check collisions (DO THIS BEFORE APPLYING GRAVITY)
-        doesCollide, mtv = Game.checkCollisions(object, self.objects)
-        if doesCollide:
-            if abs(mtv[0]) > 0:
-                object.velocity = (0, object.velocity[1])
-            if abs(mtv[1]) > 0:
-                object.velocity = (object.velocity[0], 0)
-            object.location = (object.location[0] + mtv[0], object.location[1] + mtv[1])
-            
-            
-        # Apply gravity
+        
+        ## If you apply gravity before collision check, nonfixed objects can't push eachother.
+        ## If you apply it after, nonfixed objects can push eachother into the platform below.
+        ## Not sure how to fix.
+        
+        # Apply gravity and velocities
         object.location = (object.location[0] + self.gravity[0] + object.velocity[0],
                            object.location[1] + self.gravity[1] + object.velocity[1])
                         
-
+        # Check collisions
+        doesCollide, mtv = Game.checkCollisions(object, self.objects)
+        if doesCollide:
+            if abs(mtv[0]) > 0: ##remove x vel. if collides on x axis
+                object.velocity = (0, object.velocity[1])
+            if abs(mtv[1]) > 0: ##remove y vel. if collides on y axis (doesn't affect grav)
+                object.velocity = (object.velocity[0], 0)                
+            object.location = (object.location[0] + mtv[0], object.location[1] + mtv[1])
+            
     def draw(canvas):
         for gameData in Game.games:
             game = gameData[0]
@@ -237,28 +236,30 @@ game = Game(frame, draw)
 test_sprite = simplegui.load_image("https://i.sli.mg/ZCoVVl.png")
 test = GameObject(test_sprite)
 test.name = "test"
-test.scale = (1.0, 1.0)
-test.location = (50, 0)
-test.velocity = (4, 0)
+test.scale = (1, 1.0)
+test.location = (300, 0)
+test.velocity = (-1, 0)
 game.objects.append(test)
 
 test2 = GameObject(test_sprite)
 test2.name = "test2"
-test2.scale = (1.0, 1.0)
-test2.location = (350, 0)
+test2.scale = (0.3, 0.5)
+test2.location = (0, 0)
+test2.velocity = (3, 0)
 game.objects.append(test2)
 
 test3 = GameObject(test_sprite)
 test3.name = "test3"
-test3.scale = (1.0, 1.0)
-test3.location = (500, 0)
+test3.scale = (0.1, 0.1)
+test3.location = (275, -100)
+test3.velocity = (-.5, 0)
 game.objects.append(test3)
 
 platform = GameObject(test_sprite)
 platform.location = (300, 300)
 platform.name = "platform"
 platform.fixed = True
-platform.scale = (1, 1)
+platform.scale = (3.0, 1.0)
 game.objects.append(platform)
 
 frame.start()
