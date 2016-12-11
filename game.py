@@ -21,6 +21,7 @@ class GameObject:
         self.rotation = 0
         self.fixed = False
         self.sprite = sprite
+        self.name = "name"
         return self
     
     def spriteCenter(self):
@@ -72,61 +73,66 @@ class Game:
         
     def checkCollisions(obj1, objects):
         obj1_bounds = obj1.scaled_bounds()
+        obj1_o = obj1_bounds[0]
+        obj1_s = obj1.scaled_size()
         
         if COLLISION_DEBUG:
-            print "Collision rect:"
+            print "OBJECT: \t" + obj1.name
             print "TOP_LEFT:\t" + str(obj1_bounds[0])
             print "TOP_RIGHT:\t" + str(obj1_bounds[1])
             print "BOTTOM_LEFT:\t" + str(obj1_bounds[2])
             print "BOTTOM_RIGHT:\t" + str(obj1_bounds[3])
+            print "SCALED_SIZE:\t" + str(obj1_s)
             print
-            
-        obj1_o = obj1_bounds[0]
-        obj1_s = obj1.scaled_size()
+
         
         for obj2 in objects:
-            if object is obj2:
-                # We can't collide with ourself
+            
+            if objects.index(obj1) == objects.index(obj2):
                 continue
+           
             obj2_bounds = obj2.scaled_bounds()
             obj2_o = obj2_bounds[0]
-            obj2_s = obj2.scaled_size()
+            obj2_s = obj2.scaled_size() 
             
-            # Check if colliding (boolean)
-#            if (obj1_loc[0] > obj2_loc[0] and
-#                obj1_loc[0] < obj2_loc[0] + obj2_s[0] and
-#                # I HAD TO STOP HERE
-#                
-#                obj1_loc[0] < obj2_loc[0] + obj2_s[0] and
-#                obj1_loc[0] + obj1_s[0] > obj2_loc[0] and
-#                obj1_loc[1] < obj2_loc[1] + obj2_s[1] and
-#                obj1_loc[1] + obj1_s[1] > obj2_loc[1]):
-            if ((obj1_o[0] < obj2_o[0] + obj2_s[0] and ##i think this is right but tbh i have no idea
-                 obj1_o[0] + obj1_s[0] > obj2_o[0]) and 
-                (obj1_o[1] < obj2_o[1] - obj2_s[1] and 
-                 obj1_o[1] - obj1_s[1] > obj2_o[1])):
-                    doesCollide = True
-                # Find translation vector 
-                # Find distances between shape1's edge and shape2's opposite edge
-                edge_differences_x = [
-                    obj1_loc[0] - (obj2_loc[0] + obj2_s[0]), # Left
-                    obj1_loc[0] + obj1_s[0] - obj2_loc[0] # Right
-                ]
-                edge_differences_y = [
-                    obj1_loc[1] - (obj2_loc[1] + obj2_s[1]), # Top
-                    obj1_loc[1] + obj1_s[1] - obj2_loc[1] # Bottom
-                ]
-                edge_differences_x = sorted(edge_differences_x)
-                edge_differences_y = sorted(edge_differences_y)
-                mtv = (edge_differences_x[1], edge_differences_y[1])
+            if COLLISION_DEBUG:
+                print "OBJECT 2:\t" + obj2.name
+                print "TOP_LEFT:\t" + str(obj2_bounds[0])
+                print "TOP_RIGHT:\t" + str(obj2_bounds[1])
+                print "BOTTOM_LEFT:\t" + str(obj2_bounds[2])
+                print "BOTTOM_RIGHT:\t" + str(obj2_bounds[3])
+                print "SCALED_SIZE:\t" + str(obj2_s)
+                print
 
-                if COLLISION_DEBUG:
-                    print "Collision!"
-                    print "MTV:\t" + str(mtv)
-                    print
+            
+            if ((obj1_o[0] < obj2_o[0] + obj2_s[0] and ##got these from online, should be right
+                 obj1_o[0] + obj1_s[0] > obj2_o[0]) and 
+                (obj1_o[1] < obj2_o[1] + obj2_s[1] and 
+                 obj1_o[1] + obj1_s[1] > obj2_o[1])):
+                
+                    # Find distances between shape1's edge and shape2's opposite edge
+                    edge_differences_x = [
+                        obj1_o[0] - (obj2_o[0] + obj2_s[0]), # Left
+                        (obj1_o[0] + obj1_s[0]) - obj2_o[0] # Right
+                    ]
+                    edge_differences_y = [
+                        obj1_o[1] - (obj2_o[1] + obj2_s[1]), # Top
+                        (obj1_o[1] + obj1_s[1]) - obj2_o[1] # Bottom
+                    ]
+                    edge_differences_x = sorted(edge_differences_x)
+                    edge_differences_y = sorted(edge_differences_y)
+                    mtv = (edge_differences_x[1], edge_differences_y[1])
+
+                    if COLLISION_DEBUG:
+                        print "-------------------------------"
+                        print "Collision!"
+                        print "Obj1:\t" + obj1.name + "\t" + "Obj2:\t" + obj2.name
+                        print "Vector:\t" + str(mtv)
+                        print
 
                     # Return collision boolean and translation vector
-                return True, mtv
+                    return True, mtv
+                
         return False, (0, 0)
 
     def physics(self, object):
@@ -137,8 +143,9 @@ class Game:
         # Check collisions
         doesCollide, mtv = Game.checkCollisions(object, self.objects)
         if doesCollide:
-            object.location = (object.location[0] + mtv[0], object.location[1] + mtv[1])
-    
+            object.location = (object.location[0] + mtv[0],
+                               object.location[1] + mtv[1])
+        
     def draw(canvas):
         for gameData in Game.games:
             game = gameData[0]
@@ -203,12 +210,14 @@ frame.set_canvas_background("White")
 game = Game(frame, draw)
 
 test_sprite = simplegui.load_image("https://i.sli.mg/ZCoVVl.png")
-
 test = GameObject(test_sprite)
+test.name = "test"
+test.scale = (3.0, 1.0)
 game.objects.append(test)
 
 platform = GameObject(test_sprite)
-platform.location = (100, 200)
+platform.location = (300, 200)
+platform.name = "platform"
 platform.fixed = True
 platform.scale = (4.0, 0.5)
 game.objects.append(platform)
