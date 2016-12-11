@@ -93,7 +93,14 @@ class Game:
             obj2_s = obj2.scaled_size()
             
             # Check if colliding (boolean)
-            if obj1_loc[0] < obj2_loc[0] + obj2_s[0] and obj1_loc[0] + obj1_s[0] > obj2_loc[0] and obj1_loc[1] < obj2_loc[1] + obj2_s[1] and obj1_loc[1] + obj1_s[1] > obj2_loc[1]:
+            if (obj1_loc[0] > obj2_loc[0] and
+                obj1_loc[0] < obj2_loc[0] + obj2_s[0] and
+                # I HAD TO STOP HERE
+                
+                obj1_loc[0] < obj2_loc[0] + obj2_s[0] and
+                obj1_loc[0] + obj1_s[0] > obj2_loc[0] and
+                obj1_loc[1] < obj2_loc[1] + obj2_s[1] and
+                obj1_loc[1] + obj1_s[1] > obj2_loc[1]):
                 
                 # Find translation vector 
                 # Find distances between shape1's edge and shape2's opposite edge
