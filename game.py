@@ -7,7 +7,8 @@
 
 import simplegui
 
-DEBUG = True
+RENDER_DEBUG = False
+COLLISION_DEBUG = True
 
 class GameObject:
     
@@ -71,8 +72,18 @@ class Game:
         
     def checkCollisions(object, objects):
         obj1bounds = object.scaled_bounds()
+        if COLLISION_DEBUG:
+            print "Collision rect:"
+            print "TOP_LEFT:\t" + str(obj1bounds[0])
+            print "TOP_RIGHT:\t" + str(obj1bounds[1])
+            print "BOTTOM_LEFT:\t" + str(obj1bounds[2])
+            print "BOTTOM_RIGHT:\t" + str(obj1bounds[3])
+            print
+            
         obj1_loc, obj1_s = obj1bounds[0], object.scaled_size()
         for Game_Object in objects:
+            if object is Game_Object:
+                continue
             obj2bounds = Game_Object.scaled_bounds()
             obj2_loc, obj2_s = obj2bounds[0], Game_Object.scaled_size()
             ##check if colliding (boolean)
@@ -88,8 +99,15 @@ class Game:
                 ];
                 sorted(edgeDifferences)
                 mtv = edgeDifferences[0]
-        ##return collision boolean and translation vector
-        return doesCollide, mtv
+                
+                if COLLISION_DEBUG:
+                    print "Collision!"
+                    print "MTV:\t" + str(mtv)
+                    print
+                    
+                ##return collision boolean and translation vector
+                return doesCollide, mtv
+        return False, (0, 0)
 
     def physics(self, object):
         # Apply gravity
@@ -126,14 +144,14 @@ class Game:
             dest_size = object.scaled_size()
             rotation = object.rotation
             
-            if DEBUG:
-                print "Drawing image: "
-                print "Source center: " 		+ str(source_center)
-                print "Anchor: "				+ str(object.anchor)
-                print "Source size: " 			+ str(source_size)
-                print "Center destination: " 	+ str(center_dest)
-                print "Destination size: " 		+ str(dest_size)
-                print "Rotation: " 				+ str(rotation)
+            if RENDER_DEBUG:
+                print "Drawing image:"
+                print "Source center:\t\t" 		+ str(source_center)
+                print "Anchor:\t\t\t"			+ str(object.anchor)
+                print "Source size:\t\t" 		+ str(source_size)
+                print "Center destination:\t" 	+ str(center_dest)
+                print "Destination size:\t" 	+ str(dest_size)
+                print "Rotation:\t\t" 			+ str(rotation)
                 print
                 
             canvas.draw_image(sprite,
@@ -171,7 +189,7 @@ test = GameObject(test_sprite)
 game.objects.append(test)
 
 platform = GameObject(test_sprite)
-platform.location = (300, 200)
+platform.location = (100, 200)
 platform.fixed = True
 platform.scale = (4.0, 0.5)
 game.objects.append(platform)
