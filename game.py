@@ -264,7 +264,7 @@ frame = simplegui.create_frame("Home", CANVAS_SIZE[0], CANVAS_SIZE[1])
 frame.set_canvas_background("White")
 
 PLAYER_SPEED = 4
-JUMP_VELOCITY = -10
+JUMP_VELOCITY = -12
 
 def keydown_handler(key):
     if key == simplegui.KEY_MAP["a"] or key == simplegui.KEY_MAP["left"]:
@@ -337,6 +337,13 @@ def test_platformer():
     floor.scale = (GAME_SIZE[0] / 100, 0.25)
     floor.anchor = (0, 1)
     game.objects.append(floor)
+    
+    platform = GameObject(images["pink_rect"])
+    platform.fixed = True
+    platform.location = (200, 850)
+    platform.scale = (4, 0.25)
+    platform.anchor = (0, 1)
+    game.objects.append(platform)
 
 test_platformer()
 
