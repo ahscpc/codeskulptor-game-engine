@@ -152,8 +152,10 @@ class Game:
         ## Not sure how to fix.
         
         # Apply gravity and velocities
-        object.location = (object.location[0] + self.gravity[0] + object.velocity[0],
-                           object.location[1] + self.gravity[1] + object.velocity[1])
+        object.velocity = (object.velocity[0] + self.gravity[0],
+                           object.velocity[1] + self.gravity[1])
+        object.location = (object.location[0] + object.velocity[0],
+                           object.location[1] + object.velocity[1])
                         
         # Check collisions
         doesCollide, mtv = Game.checkCollisions(object, self.objects)
@@ -210,7 +212,7 @@ class Game:
     def __init__(self, frame, customDraw):
         self.objects = []
         self.customDraw = customDraw
-        self.gravity = (0, 4)
+        self.gravity = (0, 0.3)
         self.fixed = False
         
         Game.games.append((self, frame))
@@ -225,12 +227,15 @@ frame = simplegui.create_frame("Home", 640, 480)
 frame.set_canvas_background("White")
 
 PLAYER_SPEED = 4
+JUMP_VELOCITY = -10
 
 def keydown_handler(key):
     if key == simplegui.KEY_MAP["a"] or key == simplegui.KEY_MAP["left"]:
         player.velocity = (-PLAYER_SPEED, player.velocity[1])
     if key == simplegui.KEY_MAP["d"] or key == simplegui.KEY_MAP["right"]:
-        player.velocity = (PLAYER_SPEED, player.velocity[1]) 
+        player.velocity = (PLAYER_SPEED, player.velocity[1])
+    if key == simplegui.KEY_MAP["d"] or key == simplegui.KEY_MAP["up"] or key == simplegui.KEY_MAP["space"]:
+        player.velocity = (player.velocity[0], JUMP_VELOCITY)
 
 def keyup_handler(key):
     if key == simplegui.KEY_MAP["a"] or key == simplegui.KEY_MAP["left"]:
