@@ -9,7 +9,7 @@ def pyth(sidea, sideb):
 class GameObject:
     
     def __init__(self, sprite):
-        self.location = (0, 0)
+        self.location = (0, 0) # Location of the anchor
         self.velocity = (0, 0)
         self.scale = (1, 1)
         self.anchor = (0.5, 0.5)
@@ -17,48 +17,42 @@ class GameObject:
         self.rotation = 0
         self.fixed = False
         self.sprite = sprite
-        self.name = "name"
+        self.name = ""
         return self
     
-    def spriteCenter(self):
-        return (self.size[0] / 2, self.size[1] / 2)
-    
-    def scaled_center(self):
-        scaled_size = self.scaled_size()
-        return (scaled_size[0] / 2, scaled_size[0] / 2)
-    
-    def scaled_location_center(self):
-        scaled_center = self.scaled_center()
+    def check_anchor(self):
+        # Check that our anchor isn't broken
+        assert (self.anchor[0] >= 0.0 and self.anchor[0] <= 1.0 and
+                self.anchor[1] >= 0.0 and self.anchor[1] <= 1.0)
         
-        centerX = self.location[0] + scaled_center[0]
-        centerY = self.location[1] + scaled_center[1]
-        return (centerX, centerY)
+    # Location of the center of the game object in the game world
+    def center_location(self):
+        self.check_anchor()
+        scaled_size = self.scaled_size()
+        x = self.location[0] - (scaled_size[0] * (self.anchor[0] - 0.5))
+        y = self.location[1] - (scaled_size[1] * (self.anchor[1] - 0.5))
+        return (x, y)
         
     def scaled_size(self):
         return (self.size[0] * self.scale[0], self.size[1] * self.scale[1])
     
-    def anchoredLocation(self):
-        scaled_size = self.scaled_size()
-        scaled_center = self.scaled_center()
-        centerX = self.location[0] + scaled_center[0] - (scaled_size[0] * self.anchor[0])
-        centerY = self.location[1] + scaled_center[1] - (scaled_size[1] * self.anchor[1])
-        return (centerX, centerY)
-    
     def scaled_bounds(self):
-        scaled_location_center = self.scaled_location_center()
+        center_location = self.center_location()
         scaled_size = self.scaled_size()
+        half_scaled_size = (scaled_size[0] / 2, scaled_size[1] / 2)
+        
          ##scaling fix: +/- the entire scaled_size, not half of it.
-        top_left = (scaled_location_center[0] - scaled_size[0],
-                    scaled_location_center[1] - scaled_size[1])
+        top_left = (center_location[0] - half_scaled_size[0],
+                    center_location[1] - half_scaled_size[1])
         
-        top_right = (scaled_location_center[0] + scaled_size[0],
-                    scaled_location_center[1] - scaled_size[1])
+        top_right = (center_location[0] + half_scaled_size[0],
+                    center_location[1] - half_scaled_size[1])
         
-        bottom_left = (scaled_location_center[0] - scaled_size[0],
-                    scaled_location_center[1] + scaled_size[1])
+        bottom_left = (center_location[0] - half_scaled_size[0],
+                    center_location[1] + half_scaled_size[1])
         
-        bottom_right = (scaled_location_center[0] + scaled_size[0],
-                    scaled_location_center[1] + scaled_size[1])
+        bottom_right = (center_location[0] + half_scaled_size[0],
+                    center_location[1] + half_scaled_size[1])
         
         return (top_left, top_right, bottom_left, bottom_right)
 
@@ -188,9 +182,9 @@ class Game:
             # Draw the sprite
             
             sprite = object.sprite
-            source_center = object.spriteCenter()
+            source_center = (object.size[0] / 2, object.size[1] / 2)
             source_size = object.size
-            center_dest = object.anchoredLocation()
+            center_dest = object.center_location()
             dest_size = object.scaled_size()
             rotation = object.rotation
             
@@ -227,39 +221,79 @@ class Game:
 def draw(canvas):
     pass
 
-# Create a frame and assign callbacks to event handlers
 frame = simplegui.create_frame("Home", 640, 480)
 frame.set_canvas_background("White")
 
+PLAYER_SPEED = 4
+
+def keydown_handler(key):
+    if key == simplegui.KEY_MAP["a"] or key == simplegui.KEY_MAP["left"]:
+        player.velocity = (-PLAYER_SPEED, player.velocity[1])
+    if key == simplegui.KEY_MAP["d"] or key == simplegui.KEY_MAP["right"]:
+        player.velocity = (PLAYER_SPEED, player.velocity[1]) 
+
+def keyup_handler(key):
+    if key == simplegui.KEY_MAP["a"] or key == simplegui.KEY_MAP["left"]:
+        if player.velocity[0] == -PLAYER_SPEED:
+            player.velocity = (0, player.velocity[1])
+    if key == simplegui.KEY_MAP["d"] or key == simplegui.KEY_MAP["right"]:
+        if player.velocity[0] == PLAYER_SPEED:
+            player.velocity = (0, player.velocity[1]) 
+
+frame.set_keydown_handler(keydown_handler)
+frame.set_keyup_handler(keyup_handler)
+
 game = Game(frame, draw)
 
-test_sprite = simplegui.load_image("https://i.sli.mg/ZCoVVl.png")
-test = GameObject(test_sprite)
-test.name = "test"
-test.scale = (1, 1.0)
-test.location = (300, 0)
-test.velocity = (-1, 0)
+images = {
+    "stick_figure" 	: simplegui.load_image("https://i.sli.mg/UkLOWt.png"),
+    "pink_rect" 	: simplegui.load_image("https://i.sli.mg/ZCoVVl.png")
+    }
+
+def test_multiple_objects():
+    test = GameObject(images["pink_rect"])
+    test.name = "test"
+    test.scale = (1, 1.0)
+    test.location = (300, 0)
+    test.velocity = (-1, 0)
+    game.objects.append(test)
+
+    test2 = GameObject(images["pink_rect"])
+    test2.name = "test2"
+    test2.scale = (0.3, 0.5)
+    test2.location = (0, 0)
+    test2.velocity = (3, 0)
+    game.objects.append(test2)
+
+    test3 = GameObject(images["pink_rect"])
+    test3.name = "test3"
+    test3.scale = (0.1, 0.1)
+    test3.location = (275, -100)
+    test3.velocity = (-.5, 0)
+    game.objects.append(test3)
+
+    platform = GameObject(images["pink_rect"])
+    platform.location = (300, 300)
+    platform.name = "platform"
+    platform.fixed = True
+    platform.scale = (3.0, 1.0)
+    game.objects.append(platform)
+
+player = GameObject(images["stick_figure"])
+player.scale = (1.5, 1.5)
+player.name = "player"
+game.objects.append(player)
+
+floor = GameObject(images["pink_rect"])
+floor.fixed = True
+floor.scale = (1, 0.5)
+#game.objects.append(floor)
+
+test = GameObject(images["pink_rect"])
+test.fixed = True
+test.location = (0, 480)
+test.scale = (6.8, 0.25)
+test.anchor = (0, 1)
 game.objects.append(test)
-
-test2 = GameObject(test_sprite)
-test2.name = "test2"
-test2.scale = (0.3, 0.5)
-test2.location = (0, 0)
-test2.velocity = (3, 0)
-game.objects.append(test2)
-
-test3 = GameObject(test_sprite)
-test3.name = "test3"
-test3.scale = (0.1, 0.1)
-test3.location = (275, -100)
-test3.velocity = (-.5, 0)
-game.objects.append(test3)
-
-platform = GameObject(test_sprite)
-platform.location = (300, 300)
-platform.name = "platform"
-platform.fixed = True
-platform.scale = (3.0, 1.0)
-game.objects.append(platform)
 
 frame.start()
