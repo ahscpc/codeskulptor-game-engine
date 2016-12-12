@@ -186,11 +186,11 @@ class Game:
                 self.objects.index(object) == self.objects.index(self.camera_center_object)):
                 # Set it to the center of the player
                 center_point = object.center_location()
-                center_point = (center_point[0] - (self.canvas_size[0] /2),
+                center_point = (center_point[0] - (self.canvas_size[0] / 2),
                                 center_point[1] - (self.canvas_size[1] / 2))
                 
-                max_camera_location = (self.world_size[0] - (self.canvas_size[0] /2),
-                                       self.world_size[1] - (self.canvas_size[1] / 2))
+                max_camera_location = (self.world_size[0] - self.canvas_size[0],
+                                       self.world_size[1] - self.canvas_size[1])
                 
                 # Put it back in the bounds of the world if necessary
                 center_point = (0 if center_point[0] < 0 else center_point[0],
@@ -292,6 +292,8 @@ images = {
     "pink_rect" 	: simplegui.load_image("https://i.sli.mg/ZCoVVl.png")
     }
 
+player = None
+
 def test_multiple_objects():
     test = GameObject(images["pink_rect"])
     test.name = "test"
@@ -321,22 +323,21 @@ def test_multiple_objects():
     platform.scale = (3.0, 1.0)
     game.objects.append(platform)
 
-player = GameObject(images["stick_figure"])
-player.scale = (1.5, 1.5)
-player.name = "player"
-game.objects.append(player)
-game.camera_center_object = player
+def test_platformer():
+    global player
+    player = GameObject(images["stick_figure"])
+    player.scale = (1.5, 1.5)
+    player.name = "player"
+    game.objects.append(player)
+    game.camera_center_object = player
+    
+    floor = GameObject(images["pink_rect"])
+    floor.fixed = True
+    floor.location = (0, GAME_SIZE[1])
+    floor.scale = (GAME_SIZE[0] / 100, 0.25)
+    floor.anchor = (0, 1)
+    game.objects.append(floor)
 
-floor = GameObject(images["pink_rect"])
-floor.fixed = True
-floor.scale = (1, 0.5)
-#game.objects.append(floor)
-
-test = GameObject(images["pink_rect"])
-test.fixed = True
-test.location = (0, 480)
-test.scale = (5, 0.25)
-test.anchor = (0, 1)
-game.objects.append(test)
+test_platformer()
 
 frame.start()
