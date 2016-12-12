@@ -181,14 +181,38 @@ class Game:
             if not object.fixed:
                 self.physics(object)
             
+            # Center the camera on this object if necessary
+            if (object in self.objects and self.camera_center_object in self.objects and
+                self.objects.index(object) == self.objects.index(self.camera_center_object)):
+                # Set it to the center of the player
+                center_point = object.center_location()
+                center_point = (center_point[0] - (self.canvas_size[0] /2),
+                                center_point[1] - (self.canvas_size[1] / 2))
+                
+                max_camera_location = (self.world_size[0] - (self.canvas_size[0] /2),
+                                       self.world_size[1] - (self.canvas_size[1] / 2))
+                
+                # Put it back in the bounds of the world if necessary
+                center_point = (0 if center_point[0] < 0 else center_point[0],
+                                0 if center_point[1] < 0 else center_point[1])
+                center_point = ((max_camera_location[0] if center_point[0] > max_camera_location[0]
+                                 else center_point[0]),
+                                (max_camera_location[1] if center_point[1] > max_camera_location[1]
+                                 else center_point[1]))
+                
+                self.camera_location = center_point
+                
             # Draw the sprite
-            
             sprite = object.sprite
             source_center = (object.size[0] / 2, object.size[1] / 2)
             source_size = object.size
             center_dest = object.center_location()
             dest_size = object.scaled_size()
             rotation = object.rotation
+            
+            # Shift the destination by the camera offset
+            center_dest = (center_dest[0] - self.camera_location[0],
+                           center_dest[1] - self.camera_location[1])
             
             if RENDER_DEBUG:
                 print "Drawing image:"
@@ -207,13 +231,23 @@ class Game:
                               dest_size,
                               rotation)
             
-        self.customDraw(canvas)
+        self.custom_draw(canvas)
         
-    def __init__(self, frame, customDraw):
+    def __init__(self, frame, custom_draw, canvas_size, world_size):
+        # The world can't be smaller than the canvas
+        assert (world_size[0] >= canvas_size[0] and
+                world_size[1] >= canvas_size[1])
+        
         self.objects = []
-        self.customDraw = customDraw
+        self.custom_draw = custom_draw
         self.gravity = (0, 0.3)
         self.fixed = False
+        
+        self.canvas_size = canvas_size
+        self.world_size = world_size
+        
+        self.camera_location = (0, 0) # The location that the camera has scrolled to
+        self.camera_center_object = None # To be set to an object later on
         
         Game.games.append((self, frame))
         frame.set_draw_handler(Game.draw)
@@ -223,7 +257,10 @@ class Game:
 def draw(canvas):
     pass
 
-frame = simplegui.create_frame("Home", 640, 480)
+CANVAS_SIZE = (640, 480)
+GAME_SIZE = (1000, 1000)
+
+frame = simplegui.create_frame("Home", CANVAS_SIZE[0], CANVAS_SIZE[1])
 frame.set_canvas_background("White")
 
 PLAYER_SPEED = 4
@@ -248,7 +285,7 @@ def keyup_handler(key):
 frame.set_keydown_handler(keydown_handler)
 frame.set_keyup_handler(keyup_handler)
 
-game = Game(frame, draw)
+game = Game(frame, draw, CANVAS_SIZE, GAME_SIZE)
 
 images = {
     "stick_figure" 	: simplegui.load_image("https://i.sli.mg/UkLOWt.png"),
@@ -288,6 +325,7 @@ player = GameObject(images["stick_figure"])
 player.scale = (1.5, 1.5)
 player.name = "player"
 game.objects.append(player)
+game.camera_center_object = player
 
 floor = GameObject(images["pink_rect"])
 floor.fixed = True
@@ -297,7 +335,7 @@ floor.scale = (1, 0.5)
 test = GameObject(images["pink_rect"])
 test.fixed = True
 test.location = (0, 480)
-test.scale = (6.8, 0.25)
+test.scale = (5, 0.25)
 test.anchor = (0, 1)
 game.objects.append(test)
 
