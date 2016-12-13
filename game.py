@@ -1,10 +1,40 @@
-import simplegui, math
+import simplegui, math, urllib2
 
 RENDER_DEBUG = False
 COLLISION_DEBUG = False
 
 def pyth(sidea, sideb):
     return (sidea ** 2) + (sideb ** 2) ##no sqrt for efficiency
+
+class TileMap:
+    
+    def __init__(self, url):
+        self.csv_data = urllib2.urlopen(url).read()
+        
+        self.map_data = []
+        
+        lineno = 0
+        last = None
+        for char in self.csv_data:
+            if lineno == len(self.map_data):
+                self.map_data.append([])
+                
+            if char == "\n":
+                lineno += 1
+            elif char == "-" or char == ",":
+                pass
+            else:
+                num = int(char)
+                if last == "-":
+                    num *= -1
+                self.map_data[lineno].append(num)
+            last = char
+        self.textures = []
+        
+        self.texture_size = (32, 32)
+        self.map_size = (len(self.map_data[0]), len(self.map_data))
+        
+        return self
     
 class GameObject:
     
@@ -211,8 +241,8 @@ class Game:
             rotation = object.rotation
             
             # Shift the destination by the camera offset
-            center_dest = (center_dest[0] - self.camera_location[0],
-                           center_dest[1] - self.camera_location[1])
+            center_dest = (math.floor(center_dest[0] - self.camera_location[0]),
+                           math.floor(center_dest[1] - self.camera_location[1]))
             
             if RENDER_DEBUG:
                 print "Drawing image:"
@@ -232,7 +262,29 @@ class Game:
                               rotation)
             
         self.custom_draw(canvas)
+    
+    def load_map(self, tile_map):
+        # Make sure that the map isn't bigger than the world
+        map_pixel_size = (tile_map.texture_size[0] * tile_map.map_size[0],
+                          tile_map.texture_size[1] * tile_map.map_size[1])
+        assert map_pixel_size[0] <= self.world_size[0] and map_pixel_size[1] <= self.world_size[1]
         
+        # Populate the game world
+        for row_index in range(0, tile_map.map_size[1]):
+            row = tile_map.map_data[row_index]
+            for column_index in range(0, tile_map.map_size[0]):
+                tile_number = row[column_index]
+                if tile_number > -1:
+                    texture = tile_map.textures[tile_number]
+                    
+                    tile_object = GameObject(texture)
+                    tile_object.anchor = (0, 0)
+                    tile_object.fixed = True
+                    tile_object.location = (column_index * tile_map.texture_size[0],
+                                            row_index * tile_map.texture_size[1])
+                    
+                    self.objects.append(tile_object)
+                    
     def __init__(self, frame, custom_draw, canvas_size, world_size):
         # The world can't be smaller than the canvas
         assert (world_size[0] >= canvas_size[0] and
@@ -240,7 +292,7 @@ class Game:
         
         self.objects = []
         self.custom_draw = custom_draw
-        self.gravity = (0, 0.3)
+        self.gravity = (0, 0.4)
         self.fixed = False
         
         self.canvas_size = canvas_size
@@ -257,8 +309,9 @@ class Game:
 def draw(canvas):
     pass
 
+ASSETS = "https://raw.githubusercontent.com/ahscpc/codeskulptor-game-engine/master/assets/"
 CANVAS_SIZE = (640, 480)
-GAME_SIZE = (1000, 1000)
+GAME_SIZE = (1600, 980)
 
 frame = simplegui.create_frame("Home", CANVAS_SIZE[0], CANVAS_SIZE[1])
 frame.set_canvas_background("White")
@@ -288,8 +341,11 @@ frame.set_keyup_handler(keyup_handler)
 game = Game(frame, draw, CANVAS_SIZE, GAME_SIZE)
 
 images = {
-    "stick_figure" 	: simplegui.load_image("https://i.sli.mg/UkLOWt.png"),
-    "pink_rect" 	: simplegui.load_image("https://i.sli.mg/ZCoVVl.png")
+    "stick_figure" 	: simplegui.load_image(ASSETS + "sprites/objects/stick.png"),
+    "pink_rect" 	: simplegui.load_image(ASSETS + "sprites/objects/pink.png"),
+    "dirt" 			: simplegui.load_image(ASSETS + "sprites/terrain/dirt.png"),
+    "grass" 		: simplegui.load_image(ASSETS + "sprites/terrain/grass.png"),
+    "stone" 		: simplegui.load_image(ASSETS + "sprites/terrain/stone.png"),
     }
 
 player = None
@@ -336,15 +392,21 @@ def test_platformer():
     floor.location = (0, GAME_SIZE[1])
     floor.scale = (GAME_SIZE[0] / 100, 0.25)
     floor.anchor = (0, 1)
-    game.objects.append(floor)
+    #game.objects.append(floor)
     
     platform = GameObject(images["pink_rect"])
     platform.fixed = True
     platform.location = (200, 850)
     platform.scale = (4, 0.25)
     platform.anchor = (0, 1)
-    game.objects.append(platform)
+    #game.objects.append(platform)
 
+def test_map():
+    tile_map = TileMap(ASSETS + "tilemaps/csv/test.csv")
+    tile_map.textures = [images["dirt"], images["grass"], images["stone"]]
+    game.load_map(tile_map)
+    
 test_platformer()
+test_map()
 
 frame.start()
