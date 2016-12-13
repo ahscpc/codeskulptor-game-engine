@@ -36,6 +36,29 @@ class TileMap:
         
         return self
     
+    # Location is in block units, not pixels
+    def is_inaccessible(self, location):
+        # If a block occupies these places
+        left = False
+        right = False
+        top = False
+        bottom = False
+        if location[0] == 0:
+            left = False
+        elif location[0] >= self.map_size[0]:
+            right = False
+        else:
+            left = self.map_data[location[0] - 1][location[1]] > -1
+            right = self.map_data[location[0] + 1][location[1]] > -1
+        if location[1] == 0:
+            top = False
+        elif location[1] >= self.map_size[1]:
+            bottom = False
+        else:
+            top = self.map_data[location[0]][location[1] - 1] > -1
+            bottom = self.map_data[location[0]][location[1] + 1] > -1
+        return not left and not right and not top and not bottom
+    
 class GameObject:
     
     def __init__(self, sprite):
@@ -276,9 +299,8 @@ class Game:
             upper_limit = (lower_limit[0] + self.canvas_size[0] + dest_size[0],
                            lower_limit[1] + self.canvas_size[1] + dest_size[1])
             
-            half_dest_size = (dest_size[0] / 2, dest_size[1] / 2)
-            
-            if True:#center_dest[0] >= lower_limit[0] and center_dest[1] >= lower_limit[1]:
+            #print center_dest[1], lower_limit[1]
+            if True:#(center_dest[1] >= lower_limit[1] and center_dest[1] < upper_limit[1]):
                 canvas.draw_image(sprite,
                                   source_center,
                                   source_size,
