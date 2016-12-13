@@ -1,4 +1,4 @@
-import simplegui, math, urllib2
+import simplegui, math, urllib2, time
 
 RENDER_DEBUG = False
 COLLISION_DEBUG = False
@@ -89,7 +89,10 @@ class GameObject:
 class Game:
     
     games = []
-        
+    last_time = 0
+    last_readout = 0
+    updates = 0
+    
     def checkCollisions(obj1, objects):
         obj1_bounds = obj1.scaled_bounds()
         obj1_o = obj1_bounds[0]
@@ -197,6 +200,16 @@ class Game:
             object.location = (object.location[0] + mtv[0], object.location[1] + mtv[1])
             
     def draw(canvas):
+        Game.now_time = int(time.time())
+        
+        if Game.now_time > Game.last_time:
+            Game.last_readout = Game.updates
+            Game.updates = 0
+        else:
+            Game.updates += 1
+        
+        Game.last_time = Game.now_time
+        
         for gameData in Game.games:
             game = gameData[0]
             canvas_for_game = gameData[1]
@@ -275,6 +288,10 @@ class Game:
             else:
                 pass#print lower_limit, upper_limit, center_dest
         self.custom_draw(canvas)
+        
+        # Draw FPS
+        if self.show_fps:
+            canvas.draw_text(str(Game.last_readout), (40, 40), 36, 'Blue')
     
     def load_map(self, tile_map):
         # Make sure that the map isn't bigger than the world
@@ -314,6 +331,7 @@ class Game:
         self.camera_location = (0, 0) # The location that the camera has scrolled to
         self.camera_center_object = None # To be set to an object later on
         
+        self.show_fps = True
         Game.games.append((self, frame))
         frame.set_draw_handler(Game.draw)
         return self
