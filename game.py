@@ -230,7 +230,8 @@ class Game:
                                 (max_camera_location[1] if center_point[1] > max_camera_location[1]
                                  else center_point[1]))
                 
-                self.camera_location = center_point
+                self.camera_location = (int(center_point[0]),
+                                        int(center_point[1]))
                 
             # Draw the sprite
             sprite = object.sprite
@@ -238,11 +239,13 @@ class Game:
             source_size = object.size
             center_dest = object.center_location()
             dest_size = object.scaled_size()
+            dest_size = (int(dest_size[0]),
+                         int(dest_size[1]))
             rotation = object.rotation
             
             # Shift the destination by the camera offset
-            center_dest = (math.floor(center_dest[0] - self.camera_location[0]),
-                           math.floor(center_dest[1] - self.camera_location[1]))
+            center_dest = (int(center_dest[0] - self.camera_location[0]),
+                           int(center_dest[1] - self.camera_location[1]))
             
             if RENDER_DEBUG:
                 print "Drawing image:"
@@ -253,14 +256,24 @@ class Game:
                 print "Destination size:\t" 	+ str(dest_size)
                 print "Rotation:\t\t" 			+ str(rotation)
                 print
-                
-            canvas.draw_image(sprite,
-                              source_center,
-                              source_size,
-                              center_dest,
-                              dest_size,
-                              rotation)
             
+            # Determine if any part of the texture will be on the screen
+            lower_limit = (self.camera_location[0] - dest_size[0],
+                           self.camera_location[1] - dest_size[1])
+            upper_limit = (lower_limit[0] + self.canvas_size[0] + dest_size[0],
+                           lower_limit[1] + self.canvas_size[1] + dest_size[1])
+            
+            half_dest_size = (dest_size[0] / 2, dest_size[1] / 2)
+            
+            if True:#center_dest[0] >= lower_limit[0] and center_dest[1] >= lower_limit[1]:
+                canvas.draw_image(sprite,
+                                  source_center,
+                                  source_size,
+                                  center_dest,
+                                  dest_size,
+                                  rotation)
+            else:
+                pass#print lower_limit, upper_limit, center_dest
         self.custom_draw(canvas)
     
     def load_map(self, tile_map):
