@@ -71,6 +71,7 @@ class GameObject:
         self.fixed = False
         self.collider_enabled = True
         self.sprite = sprite
+        self.on_screen = True # Calculated every update
         self.name = ""
         return self
     
@@ -142,7 +143,7 @@ class Game:
 
         
         for obj2 in objects:
-            if not obj2.collider_enabled:
+            if not obj2.collider_enabled or not obj2.on_screen:
                 continue
                 
             if objects.index(obj1) == objects.index(obj2):
@@ -255,6 +256,14 @@ class Game:
         
         # Draw game objects
         for object in self.objects:
+            center_dest = object.center_location()
+            center_dest = (int(center_dest[0]), int(center_dest[1]))
+            dest_size = object.scaled_size()
+            dest_size = (int(dest_size[0]),
+                         int(dest_size[1]))
+            
+            object.on_screen = Game.on_screen(self.camera_location, self.canvas_size,
+                               center_dest, dest_size)
             # Perform physics
             if not object.fixed:
                 self.physics(object)
@@ -285,11 +294,6 @@ class Game:
             sprite = object.sprite
             source_center = (object.size[0] / 2, object.size[1] / 2)
             source_size = object.size
-            center_dest = object.center_location()
-            center_dest = (int(center_dest[0]), int(center_dest[1]))
-            dest_size = object.scaled_size()
-            dest_size = (int(dest_size[0]),
-                         int(dest_size[1]))
             rotation = object.rotation
             
             # Shift the destination by the camera offset
@@ -306,8 +310,7 @@ class Game:
                 print "Rotation:\t\t" 			+ str(rotation)
                 print
             
-            if (Game.on_screen(self.camera_location, self.canvas_size,
-                               center_dest, dest_size)):
+            if (object.on_screen):
                 canvas.draw_image(sprite,
                                   source_center,
                                   source_size,
