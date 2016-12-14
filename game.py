@@ -117,7 +117,16 @@ class Game:
     last_readout = 0
     updates = 0
     
-    def checkCollisions(obj1, objects):
+    def on_screen(cam, canvas, loc, scaled_size):
+        siz = (int(math.ceil(scaled_size[0] / 2)),
+               int(math.ceil(scaled_size[1] / 2)))
+        minloc = (cam[0] - siz[0], cam[1] - siz[1])
+        maxloc = (cam[0] + canvas[0] + siz[0],
+                  cam[1] + canvas[0] + siz[1])
+        return (loc[0] >= minloc[0] and loc[0] < maxloc[0] and
+                loc[1] >= minloc[1] and loc[1] < maxloc[1])
+        
+    def checkCollisions(self, obj1, objects):
         obj1_bounds = obj1.scaled_bounds()
         obj1_o = obj1_bounds[0]
         obj1_s = obj1.scaled_size()
@@ -217,7 +226,7 @@ class Game:
                            object.location[1] + object.velocity[1])
                         
         # Check collisions
-        doesCollide, mtv = Game.checkCollisions(object, self.objects)
+        doesCollide, mtv = self.checkCollisions(object, self.objects)
         if doesCollide:
             if abs(mtv[0]) > 0: ##remove x vel. if collides on x axis
                 object.velocity = (0, object.velocity[1])
@@ -277,14 +286,15 @@ class Game:
             source_center = (object.size[0] / 2, object.size[1] / 2)
             source_size = object.size
             center_dest = object.center_location()
+            center_dest = (int(center_dest[0]), int(center_dest[1]))
             dest_size = object.scaled_size()
             dest_size = (int(dest_size[0]),
                          int(dest_size[1]))
             rotation = object.rotation
             
             # Shift the destination by the camera offset
-            center_dest = (int(center_dest[0] - self.camera_location[0]),
-                           int(center_dest[1] - self.camera_location[1]))
+            shifted_center_dest = (center_dest[0] - self.camera_location[0],
+                           center_dest[1] - self.camera_location[1])
             
             if RENDER_DEBUG:
                 print "Drawing image:"
@@ -296,27 +306,20 @@ class Game:
                 print "Rotation:\t\t" 			+ str(rotation)
                 print
             
-            # Determine if any part of the texture will be on the screen
-            lower_limit = (self.camera_location[0] - dest_size[0],
-                           self.camera_location[1] - dest_size[1])
-            upper_limit = (lower_limit[0] + self.canvas_size[0] + dest_size[0],
-                           lower_limit[1] + self.canvas_size[1] + dest_size[1])
-            
-            #print center_dest[1], lower_limit[1]
-            if True:#(center_dest[1] >= lower_limit[1] and center_dest[1] < upper_limit[1]):
+            if (Game.on_screen(self.camera_location, self.canvas_size,
+                               center_dest, dest_size)):
                 canvas.draw_image(sprite,
                                   source_center,
                                   source_size,
-                                  center_dest,
+                                  shifted_center_dest,
                                   dest_size,
                                   rotation)
-            else:
-                pass#print lower_limit, upper_limit, center_dest
+                
         self.custom_draw(canvas)
         
         # Draw FPS
         if self.show_fps:
-            canvas.draw_text(str(Game.last_readout), (40, 40), 36, 'Blue')
+            canvas.draw_text(str(int(math.ceil(Game.last_readout))), (40, 40), 36, 'Blue')
     
     def load_map(self, tile_map):
         # Make sure that the map isn't bigger than the world
@@ -350,7 +353,8 @@ class Game:
         self.objects = []
         self.custom_draw = custom_draw
         self.gravity = (0, 0.4)
-        self.fixed = False
+        
+        self.offscreen_physics = False
         
         self.canvas_size = canvas_size
         self.world_size = world_size
@@ -440,7 +444,7 @@ def test_multiple_objects():
 def test_platformer():
     global player
     player = GameObject(images["stick_figure"])
-    player.scale = (1.5, 1.5)
+    player.scale = (1, 1)
     player.name = "player"
     game.objects.append(player)
     game.camera_center_object = player
