@@ -37,7 +37,7 @@ class TileMap:
         return self
     
     # Location is in block units, not pixels
-    def is_inaccessible(self, location):
+    def is_accessible(self, location):
         # If a block occupies these places
         left = False
         right = False
@@ -45,19 +45,19 @@ class TileMap:
         bottom = False
         if location[0] == 0:
             left = False
-        elif location[0] >= self.map_size[0]:
+        elif location[0] >= self.map_size[0] - 1:
             right = False
         else:
-            left = self.map_data[location[0] - 1][location[1]] > -1
-            right = self.map_data[location[0] + 1][location[1]] > -1
+            left = self.map_data[location[1]][location[0] - 1] == -1
+            right = self.map_data[location[1]][location[0] + 1] == -1
         if location[1] == 0:
             top = False
-        elif location[1] >= self.map_size[1]:
+        elif location[1] >= self.map_size[1] - 1:
             bottom = False
         else:
-            top = self.map_data[location[0]][location[1] - 1] > -1
-            bottom = self.map_data[location[0]][location[1] + 1] > -1
-        return not left and not right and not top and not bottom
+            top = self.map_data[location[1] - 1][location[0]] == -1
+            bottom = self.map_data[location[1] + 1][location[0]] == -1
+        return left or right or top or bottom
     
 class GameObject:
     
@@ -69,6 +69,7 @@ class GameObject:
         self.size = (sprite.get_width(), sprite.get_height())
         self.rotation = 0
         self.fixed = False
+        self.collider_enabled = True
         self.sprite = sprite
         self.name = ""
         return self
@@ -132,7 +133,9 @@ class Game:
 
         
         for obj2 in objects:
-            
+            if not obj2.collider_enabled:
+                continue
+                
             if objects.index(obj1) == objects.index(obj2):
                 continue
            
@@ -334,6 +337,8 @@ class Game:
                     tile_object.fixed = True
                     tile_object.location = (column_index * tile_map.texture_size[0],
                                             row_index * tile_map.texture_size[1])
+                    
+                    tile_object.collider_enabled = tile_map.is_accessible((column_index, row_index))
                     
                     self.objects.append(tile_object)
                     
