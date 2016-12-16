@@ -43,17 +43,23 @@ class TileMap:
         right = False
         top = False
         bottom = False
+        
+        # FIXME: Do this without duplicate lines
         if location[0] == 0:
             left = False
+            right = self.map_data[location[1]][location[0] + 1] == -1
         elif location[0] >= self.map_size[0] - 1:
             right = False
+            left = self.map_data[location[1]][location[0] - 1] == -1
         else:
             left = self.map_data[location[1]][location[0] - 1] == -1
             right = self.map_data[location[1]][location[0] + 1] == -1
         if location[1] == 0:
             top = False
+            bottom = self.map_data[location[1] + 1][location[0]] == -1
         elif location[1] >= self.map_size[1] - 1:
             bottom = False
+            top = self.map_data[location[1] - 1][location[0]] == -1
         else:
             top = self.map_data[location[1] - 1][location[0]] == -1
             bottom = self.map_data[location[1] + 1][location[0]] == -1
@@ -443,26 +449,20 @@ def test_platformer():
     game.objects.append(player)
     game.camera_center_object = player
     
-    floor = GameObject(images["pink_rect"])
-    floor.fixed = True
-    floor.location = (0, GAME_SIZE[1])
-    floor.scale = (GAME_SIZE[0] / 100, 0.25)
-    floor.anchor = (0, 1)
-    #game.objects.append(floor)
-    
-    platform = GameObject(images["pink_rect"])
-    platform.fixed = True
-    platform.location = (200, 850)
-    platform.scale = (4, 0.25)
-    platform.anchor = (0, 1)
-    #game.objects.append(platform)
+    player.location = (80, 80)
 
 def test_map():
     tile_map = TileMap(ASSETS + "tilemaps/csv/test.csv")
     tile_map.textures = [images["dirt"], images["grass"], images["stone"]]
     game.load_map(tile_map)
-    
+
+def test_small_map():
+    tile_map = TileMap(ASSETS + "tilemaps/csv/small.csv")
+    tile_map.textures = [images["dirt"], images["grass"], images["stone"]]
+    game.load_map(tile_map)
+
 test_platformer()
-test_map()
+#test_map()
+test_small_map()
 
 frame.start()
