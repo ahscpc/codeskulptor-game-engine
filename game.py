@@ -119,8 +119,8 @@ class Game:
     updates = 0
     
     def on_screen(cam, canvas, loc, scaled_size):
-        siz = (int(math.ceil(scaled_size[0] / 2)),
-               int(math.ceil(scaled_size[1] / 2)))
+        siz = (scaled_size[0] / 2,
+               scaled_size[1] / 2)
         minloc = (cam[0] - siz[0], cam[1] - siz[1])
         maxloc = (cam[0] + canvas[0] + siz[0],
                   cam[1] + canvas[0] + siz[1])
@@ -143,10 +143,8 @@ class Game:
 
         
         for obj2 in objects:
-            if not obj2.collider_enabled or not obj2.on_screen:
-                continue
-                
-            if objects.index(obj1) == objects.index(obj2):
+            if (not obj2.collider_enabled or not obj2.on_screen
+                or objects.index(obj1) == objects.index(obj2)):
                 continue
            
             obj2_bounds = obj2.scaled_bounds()
@@ -201,7 +199,7 @@ class Game:
                         print "3:\t" + str(edge_differences[1])                        
                         print                
                         
-                    mtv = (edge_differences[0]) ##pick smallest one
+                    mtv = edge_differences[0] ##pick smallest one
                     
                     if COLLISION_DEBUG:
                         print "Obj1:\t" + obj1.name + "\t" + "Obj2:\t" + obj2.name
@@ -257,10 +255,10 @@ class Game:
         # Draw game objects
         for object in self.objects:
             center_dest = object.center_location()
-            center_dest = (int(center_dest[0]), int(center_dest[1]))
+            center_dest = center_dest[0], center_dest[1]
             dest_size = object.scaled_size()
-            dest_size = (int(dest_size[0]),
-                         int(dest_size[1]))
+            dest_size = (dest_size[0],
+                         dest_size[1])
             
             object.on_screen = Game.on_screen(self.camera_location, self.canvas_size,
                                center_dest, dest_size)
@@ -287,8 +285,8 @@ class Game:
                                 (max_camera_location[1] if center_point[1] > max_camera_location[1]
                                  else center_point[1]))
                 
-                self.camera_location = (int(center_point[0]),
-                                        int(center_point[1]))
+                self.camera_location = (center_point[0],
+                                        center_point[1])
                 
             # Draw the sprite
             sprite = object.sprite
@@ -300,22 +298,15 @@ class Game:
             shifted_center_dest = (center_dest[0] - self.camera_location[0],
                            center_dest[1] - self.camera_location[1])
             
-            if RENDER_DEBUG:
-                print "Drawing image:"
-                print "Source center:\t\t" 		+ str(source_center)
-                print "Anchor:\t\t\t"			+ str(object.anchor)
-                print "Source size:\t\t" 		+ str(source_size)
-                print "Center destination:\t" 	+ str(center_dest)
-                print "Destination size:\t" 	+ str(dest_size)
-                print "Rotation:\t\t" 			+ str(rotation)
-                print
+            def to_int(tuple):
+                return (int(tuple[0]), int(tuple[1]))
             
             if (object.on_screen):
                 canvas.draw_image(sprite,
                                   source_center,
                                   source_size,
-                                  shifted_center_dest,
-                                  dest_size,
+                                  to_int(shifted_center_dest),
+                                  to_int(dest_size),
                                   rotation)
                 
         self.custom_draw(canvas)
@@ -376,7 +367,7 @@ def draw(canvas):
 
 ASSETS = "https://raw.githubusercontent.com/ahscpc/codeskulptor-game-engine/master/assets/"
 CANVAS_SIZE = (640, 480)
-GAME_SIZE = (1600, 980)
+GAME_SIZE = (1600, 960)
 
 frame = simplegui.create_frame("Home", CANVAS_SIZE[0], CANVAS_SIZE[1])
 frame.set_canvas_background("White")
